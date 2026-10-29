@@ -1,0 +1,45 @@
+name: minha primeira esteira
+
+# Define quais eventos vão disparar este pipeline
+on:
+  push:
+    branches: 
+      - main
+  pull_request:
+    branches: 
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Package application
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Baixa o código do repositório para dentro do runner do GitHub
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
+    # Step 2: Configura o ambiente Java (JDK) e gerencia automaticamente o cache do Maven
+    - name: Set up JDK 25
+      uses: actions/setup-java@v4
+      with:
+        java-version: '25'       # Altere para '21' se estiver usando o Java 21
+        distribution: 'temurin'   # Distribuição open-source recomendada e amplamente usada
+        cache: 'maven'            # Salva a pasta .m2 automaticamente para acelerar os próximos builds
+
+    # Step 3: Garante que o script do Maven wrapper tenha permissão para rodar no Linux
+    - name: Grant execute permission for maven wrapper
+      run: chmod +x mvnw
+
+    # Step 4: Compila o código, roda os testes unitários e empacota tudo em um arquivo .jar
+    - name: Build with Maven (Compile, Test and Package)
+      run: ./mvnw clean package
+
+    # Step 5: Salva o arquivo .jar gerado como um artefato do GitHub (opcional, útil para o Lab 2)
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: springboot-app-jar
+        path: target/*.jar        # O Maven por padrão joga o .jar gerado dentro da pasta 'target'
+        retention-days: 5         # Mantém o arquivo guardado no GitHub por 5 dias
